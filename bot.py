@@ -38,7 +38,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
 
+    # =========================
     # ВЫБОР АКТИВА
+    # =========================
+
     if text == "📂 Выбрать актив":
 
         context.user_data["page"] = "assets"
@@ -56,7 +59,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # =========================
     # ВАЛЮТЫ
+    # =========================
+
     elif text == "💱 Валюты":
 
         context.user_data["page"] = "forex"
@@ -75,14 +81,137 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-    # ВЫБОР ВАЛЮТЫ
+    # =========================
+    # КРИПТОВАЛЮТЫ
+    # =========================
+
+    elif text == "₿ Криптовалюты":
+
+        context.user_data["page"] = "crypto"
+
+        await update.message.reply_text(
+            "₿ Выберите криптовалюту:",
+            reply_markup=show_menu([
+                ["BTC/USDT"],
+                ["ETH/USDT"],
+                ["BNB/USDT"],
+                ["SOL/USDT"],
+                ["XRP/USDT"],
+                ["ADA/USDT"],
+                ["DOGE/USDT"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    # =========================
+    # СЫРЬЕВЫЕ ТОВАРЫ
+    # =========================
+
+    elif text == "🥇 Сырьевые товары":
+
+        context.user_data["page"] = "commodities"
+
+        await update.message.reply_text(
+            "🥇 Выберите сырьевой товар:",
+            reply_markup=show_menu([
+                ["🥇 Gold XAU/USD"],
+                ["🥈 Silver XAG/USD"],
+                ["🛢 Oil WTI"],
+                ["🛢 Oil Brent"],
+                ["🔥 Natural Gas"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    # =========================
+    # АКЦИИ
+    # =========================
+
+    elif text == "🏢 Акции":
+
+        context.user_data["page"] = "stocks"
+
+        await update.message.reply_text(
+            "🏢 Выберите акцию:",
+            reply_markup=show_menu([
+                ["Apple"],
+                ["Tesla"],
+                ["Microsoft"],
+                ["Amazon"],
+                ["Google"],
+                ["NVIDIA"],
+                ["Meta"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    # =========================
+    # ИНДЕКСЫ
+    # =========================
+
+    elif text == "📈 Индексы":
+
+        context.user_data["page"] = "indexes"
+
+        await update.message.reply_text(
+            "📈 Выберите индекс:",
+            reply_markup=show_menu([
+                ["NASDAQ"],
+                ["S&P 500"],
+                ["Dow Jones"],
+                ["DAX"],
+                ["FTSE 100"],
+                ["Nikkei 225"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    # =========================
+    # ВЫБОР КОНКРЕТНОГО АКТИВА
+    # =========================
+
     elif text in [
+
         "EUR/USD",
         "GBP/USD",
         "USD/JPY",
         "AUD/USD",
         "USD/CAD",
-        "USD/CHF"
+        "USD/CHF",
+
+        "BTC/USDT",
+        "ETH/USDT",
+        "BNB/USDT",
+        "SOL/USDT",
+        "XRP/USDT",
+        "ADA/USDT",
+        "DOGE/USDT",
+
+        "🥇 Gold XAU/USD",
+        "🥈 Silver XAG/USD",
+        "🛢 Oil WTI",
+        "🛢 Oil Brent",
+        "🔥 Natural Gas",
+
+        "Apple",
+        "Tesla",
+        "Microsoft",
+        "Amazon",
+        "Google",
+        "NVIDIA",
+        "Meta",
+
+        "NASDAQ",
+        "S&P 500",
+        "Dow Jones",
+        "DAX",
+        "FTSE 100",
+        "Nikkei 225"
+
     ]:
 
         context.user_data["asset"] = text
@@ -90,8 +219,8 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(
             f"✅ Актив выбран:\n\n"
-            f"💱 {text}\n\n"
-            f"⏱ Теперь выберите время сделки:",
+            f"📊 {text}\n\n"
+            f"⏱ Выберите время сделки:",
             reply_markup=show_menu([
                 ["30 секунд"],
                 ["1 минута"],
@@ -103,13 +232,18 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # =========================
     # ВЫБОР ВРЕМЕНИ
+    # =========================
+
     elif text in [
+
         "30 секунд",
         "1 минута",
         "3 минуты",
         "5 минут",
         "15 минут"
+
     ]:
 
         context.user_data["time"] = text
@@ -121,7 +255,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(
             f"✅ Настройки сохранены!\n\n"
-            f"💱 Актив: {asset}\n"
+            f"📊 Актив: {asset}\n"
             f"⏱ Время: {text}\n\n"
             f"📊 Теперь можно получать сигнал.",
             reply_markup=show_menu([
@@ -133,7 +267,35 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # =========================
+    # ПОЛУЧИТЬ СИГНАЛ
+    # =========================
+
+    elif text == "📊 Получить сигнал":
+
+        asset = context.user_data.get(
+            "asset",
+            "не выбран"
+        )
+
+        trade_time = context.user_data.get(
+            "time",
+            "не выбрано"
+        )
+
+        await update.message.reply_text(
+            f"📊 Параметры сигнала:\n\n"
+            f"📊 Актив: {asset}\n"
+            f"⏱ Время: {trade_time}\n\n"
+            f"⏳ Анализ рынка...\n\n"
+            f"⚠️ Реальный сигнал пока не подключен."
+        )
+
+
+    # =========================
     # ИЗМЕНИТЬ АКТИВ
+    # =========================
+
     elif text == "📂 Изменить актив":
 
         context.user_data["page"] = "assets"
@@ -151,7 +313,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # =========================
     # ИЗМЕНИТЬ ВРЕМЯ
+    # =========================
+
     elif text == "⏱ Изменить время":
 
         await update.message.reply_text(
@@ -167,29 +332,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-    # ПОЛУЧИТЬ СИГНАЛ
-    elif text == "📊 Получить сигнал":
-
-        asset = context.user_data.get(
-            "asset",
-            "не выбран"
-        )
-
-        trade_time = context.user_data.get(
-            "time",
-            "не выбрано"
-        )
-
-        await update.message.reply_text(
-            f"📊 Параметры сигнала:\n\n"
-            f"💱 Актив: {asset}\n"
-            f"⏱ Время: {trade_time}\n\n"
-            f"⏳ Анализ рынка...\n\n"
-            f"⚠️ Реальный сигнал пока не подключен."
-        )
-
-
+    # =========================
     # НАСТРОЙКИ
+    # =========================
+
     elif text == "⚙️ Настройки":
 
         asset = context.user_data.get(
@@ -204,7 +350,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(
             f"⚙️ Настройки\n\n"
-            f"💱 Актив: {asset}\n"
+            f"📊 Актив: {asset}\n"
             f"⏱ Время: {trade_time}",
             reply_markup=show_menu([
                 ["📂 Изменить актив"],
@@ -214,7 +360,21 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # =========================
+    # ИСТОРИЯ
+    # =========================
+
+    elif text == "📜 История":
+
+        await update.message.reply_text(
+            "📜 История сигналов пока пустая."
+        )
+
+
+    # =========================
     # ГЛАВНОЕ МЕНЮ
+    # =========================
+
     elif text == "🏠 Главное меню":
 
         context.user_data["page"] = "main"
@@ -225,7 +385,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # =========================
     # НАЗАД
+    # =========================
+
     elif text == "⬅️ Назад":
 
         await update.message.reply_text(
@@ -234,15 +397,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-    # ИСТОРИЯ
-    elif text == "📜 История":
-
-        await update.message.reply_text(
-            "📜 История сигналов пока пустая."
-        )
-
-
-    # ОСТАЛЬНЫЕ КНОПКИ
     else:
 
         await update.message.reply_text(
