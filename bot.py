@@ -55,7 +55,21 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif text == "⬅️ Назад":
+    elif text == "💱 Валюты":
 
+        context.user_data["page"] = "forex"
+
+        await update.message.reply_text(
+            "💱 Выберите валютную пару:",
+            reply_markup=show_menu([
+                ["EUR/USD"],
+                ["GBP/USD"],
+                ["USD/JPY"],
+                ["AUD/USD"],
+                ["USD/CAD"],
+                ["⬅️ Назад"]
+            ])
+        )
         page = context.user_data.get("page")
 
         if page == "assets":
