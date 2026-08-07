@@ -72,7 +72,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-    elif text in [
+        elif text in [
         "EUR/USD",
         "GBP/USD",
         "USD/JPY",
@@ -82,10 +82,40 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]:
 
         context.user_data["asset"] = text
+        context.user_data["page"] = "time"
 
         await update.message.reply_text(
-            f"✅ Выбран актив:\n\n💱 {text}\n\n"
-            "Следующий шаг — выбор времени сделки."
+            f"✅ Выбран актив:\n\n"
+            f"💱 {text}\n\n"
+            "⏱ Выберите время сделки:",
+            reply_markup=show_menu([
+                ["30 секунд"],
+                ["1 минута"],
+                ["3 минуты"],
+                ["5 минут"],
+                ["15 минут"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    elif text in [
+        "30 секунд",
+        "1 минута",
+        "3 минуты",
+        "5 минут",
+        "15 минут"
+    ]:
+
+        context.user_data["time"] = text
+
+        asset = context.user_data.get("asset", "не выбран")
+
+        await update.message.reply_text(
+            f"✅ Настройки сохранены!\n\n"
+            f"💱 Актив: {asset}\n"
+            f"⏱ Время сделки: {text}\n\n"
+            "📊 Теперь можно получать сигнал."
         )
 
 
