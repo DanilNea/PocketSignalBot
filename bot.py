@@ -25,7 +25,6 @@ def main_menu():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data["page"] = "main"
-    context.user_data["history"] = []
 
     await update.message.reply_text(
         "🤖 Pocket Signal Bot\n\n"
@@ -37,6 +36,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
+
 
     if text == "📂 Выбрать актив":
 
@@ -54,38 +54,35 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ])
         )
 
-    elif text == "⬅️ Назад":
-    elif text == "💱 Валюты":
 
-        context.user_data["page"] = "forex"
+    elif text == "⏱ Время сделки":
 
         await update.message.reply_text(
-            "💱 Выберите валютную пару:",
+            "⏱ Выберите время сделки:",
             reply_markup=show_menu([
-                ["EUR/USD"],
-                ["GBP/USD"],
-                ["USD/JPY"],
-                ["AUD/USD"],
-                ["USD/CAD"],
+                ["30 секунд"],
+                ["1 минута"],
+                ["3 минуты"],
+                ["5 минут"],
+                ["15 минут"],
                 ["⬅️ Назад"]
             ])
         )
-        page = context.user_data.get("page")
 
-        if page == "assets":
 
-            context.user_data["page"] = "main"
+    elif text == "⚙️ Настройки":
 
-            await update.message.reply_text(
-                "🏠 Главное меню:",
-                reply_markup=main_menu()
-            )
-
-        else:
-            await update.message.reply_text(
-                "🏠 Главное меню:",
-                reply_markup=main_menu()
-            )
+        await update.message.reply_text(
+            "⚙️ Настройки:",
+            reply_markup=show_menu([
+                ["💱 Сменить актив"],
+                ["⏱ Изменить время"],
+                ["📊 Стиль анализа"],
+                ["🔔 Уведомления"],
+                ["🌐 Язык"],
+                ["⬅️ Назад"]
+            ])
+        )
 
 
     elif text == "🏠 Главное меню":
@@ -98,11 +95,21 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    elif text == "⬅️ Назад":
+
+        context.user_data["page"] = "main"
+
+        await update.message.reply_text(
+            "🏠 Главное меню:",
+            reply_markup=main_menu()
+        )
+
+
     else:
 
         await update.message.reply_text(
-            f"Вы нажали: {text}\n"
-            "Функция добавляется."
+            f"Вы выбрали: {text}\n\n"
+            "Функция будет добавлена."
         )
 
 
