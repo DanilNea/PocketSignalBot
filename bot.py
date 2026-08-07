@@ -27,7 +27,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["page"] = "main"
 
     await update.message.reply_text(
-        "🤖 Pocket Signal Bot\n\n🏠 Главное меню:",
+        "🤖 Pocket Signal Bot\n\n"
+        "🏠 Главное меню:",
         reply_markup=main_menu()
     )
 
@@ -37,6 +38,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
 
+    # ВЫБОР АКТИВА
     if text == "📂 Выбрать актив":
 
         context.user_data["page"] = "assets"
@@ -54,6 +56,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # ВАЛЮТЫ
     elif text == "💱 Валюты":
 
         context.user_data["page"] = "forex"
@@ -72,7 +75,8 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-        elif text in [
+    # ВЫБОР ВАЛЮТЫ
+    elif text in [
         "EUR/USD",
         "GBP/USD",
         "USD/JPY",
@@ -85,9 +89,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["page"] = "time"
 
         await update.message.reply_text(
-            f"✅ Выбран актив:\n\n"
+            f"✅ Актив выбран:\n\n"
             f"💱 {text}\n\n"
-            "⏱ Выберите время сделки:",
+            f"⏱ Теперь выберите время сделки:",
             reply_markup=show_menu([
                 ["30 секунд"],
                 ["1 минута"],
@@ -99,6 +103,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # ВЫБОР ВРЕМЕНИ
     elif text in [
         "30 секунд",
         "1 минута",
@@ -109,26 +114,107 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.user_data["time"] = text
 
-        asset = context.user_data.get("asset", "не выбран")
+        asset = context.user_data.get(
+            "asset",
+            "не выбран"
+        )
 
         await update.message.reply_text(
             f"✅ Настройки сохранены!\n\n"
             f"💱 Актив: {asset}\n"
-            f"⏱ Время сделки: {text}\n\n"
-            "📊 Теперь можно получать сигнал."
+            f"⏱ Время: {text}\n\n"
+            f"📊 Теперь можно получать сигнал.",
+            reply_markup=show_menu([
+                ["📊 Получить сигнал"],
+                ["📂 Изменить актив"],
+                ["⏱ Изменить время"],
+                ["⬅️ Назад"]
+            ])
         )
 
 
-    elif text == "⬅️ Назад":
+    # ИЗМЕНИТЬ АКТИВ
+    elif text == "📂 Изменить актив":
 
-        context.user_data["page"] = "main"
+        context.user_data["page"] = "assets"
 
         await update.message.reply_text(
-            "🏠 Главное меню:",
-            reply_markup=main_menu()
+            "📂 Выберите раздел:",
+            reply_markup=show_menu([
+                ["💱 Валюты"],
+                ["₿ Криптовалюты"],
+                ["🥇 Сырьевые товары"],
+                ["🏢 Акции"],
+                ["📈 Индексы"],
+                ["⬅️ Назад"]
+            ])
         )
 
 
+    # ИЗМЕНИТЬ ВРЕМЯ
+    elif text == "⏱ Изменить время":
+
+        await update.message.reply_text(
+            "⏱ Выберите новое время:",
+            reply_markup=show_menu([
+                ["30 секунд"],
+                ["1 минута"],
+                ["3 минуты"],
+                ["5 минут"],
+                ["15 минут"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    # ПОЛУЧИТЬ СИГНАЛ
+    elif text == "📊 Получить сигнал":
+
+        asset = context.user_data.get(
+            "asset",
+            "не выбран"
+        )
+
+        trade_time = context.user_data.get(
+            "time",
+            "не выбрано"
+        )
+
+        await update.message.reply_text(
+            f"📊 Параметры сигнала:\n\n"
+            f"💱 Актив: {asset}\n"
+            f"⏱ Время: {trade_time}\n\n"
+            f"⏳ Анализ рынка...\n\n"
+            f"⚠️ Реальный сигнал пока не подключен."
+        )
+
+
+    # НАСТРОЙКИ
+    elif text == "⚙️ Настройки":
+
+        asset = context.user_data.get(
+            "asset",
+            "не выбран"
+        )
+
+        trade_time = context.user_data.get(
+            "time",
+            "не выбрано"
+        )
+
+        await update.message.reply_text(
+            f"⚙️ Настройки\n\n"
+            f"💱 Актив: {asset}\n"
+            f"⏱ Время: {trade_time}",
+            reply_markup=show_menu([
+                ["📂 Изменить актив"],
+                ["⏱ Изменить время"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    # ГЛАВНОЕ МЕНЮ
     elif text == "🏠 Главное меню":
 
         context.user_data["page"] = "main"
@@ -139,10 +225,28 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    # НАЗАД
+    elif text == "⬅️ Назад":
+
+        await update.message.reply_text(
+            "🏠 Главное меню:",
+            reply_markup=main_menu()
+        )
+
+
+    # ИСТОРИЯ
+    elif text == "📜 История":
+
+        await update.message.reply_text(
+            "📜 История сигналов пока пустая."
+        )
+
+
+    # ОСТАЛЬНЫЕ КНОПКИ
     else:
 
         await update.message.reply_text(
-            f"Вы нажали: {text}\n\nФункция добавляется."
+            f"Вы выбрали: {text}"
         )
 
 
@@ -155,7 +259,10 @@ def main():
     )
 
     app.add_handler(
-        MessageHandler(filters.TEXT, handler)
+        MessageHandler(
+            filters.TEXT & ~filters.COMMAND,
+            handler
+        )
     )
 
     print("Бот запущен")
