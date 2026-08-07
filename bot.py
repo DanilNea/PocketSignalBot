@@ -39,6 +39,91 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "📂 Выбрать актив":
+        elif text == "⬅️ Назад":
+                elif text == "💱 Валюты":
+
+        context.user_data["page"] = "forex"
+
+        await update.message.reply_text(
+            "💱 Выберите валютную пару:",
+            reply_markup=show_menu([
+                ["EUR/USD"],
+                ["GBP/USD"],
+                ["USD/JPY"],
+                ["AUD/USD"],
+                ["USD/CAD"],
+                ["USD/CHF"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    elif text == "₿ Криптовалюты":
+
+        context.user_data["page"] = "crypto"
+
+        await update.message.reply_text(
+            "₿ Выберите криптовалюту:",
+            reply_markup=show_menu([
+                ["BTC/USDT"],
+                ["ETH/USDT"],
+                ["BNB/USDT"],
+                ["SOL/USDT"],
+                ["XRP/USDT"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    elif text == "🥇 Сырьевые товары":
+
+        context.user_data["page"] = "goods"
+
+        await update.message.reply_text(
+            "🥇 Выберите товар:",
+            reply_markup=show_menu([
+                ["🥇 Gold XAU/USD"],
+                ["🥈 Silver XAG/USD"],
+                ["🛢 Oil WTI"],
+                ["🛢 Oil Brent"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    elif text == "🏢 Акции":
+
+        context.user_data["page"] = "stocks"
+
+        await update.message.reply_text(
+            "🏢 Выберите акцию:",
+            reply_markup=show_menu([
+                ["Apple"],
+                ["Tesla"],
+                ["Microsoft"],
+                ["Amazon"],
+                ["Google"],
+                ["NVIDIA"],
+                ["⬅️ Назад"]
+            ])
+        )
+
+
+    elif text == "📈 Индексы":
+
+        context.user_data["page"] = "indexes"
+
+        await update.message.reply_text(
+            "📈 Выберите индекс:",
+            reply_markup=show_menu([
+                ["NASDAQ"],
+                ["S&P 500"],
+                ["Dow Jones"],
+                ["DAX"],
+                ["FTSE 100"],
+                ["⬅️ Назад"]
+            ])
+        )
 
         context.user_data["page"] = "assets"
 
