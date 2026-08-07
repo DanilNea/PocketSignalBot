@@ -39,7 +39,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "📂 Выбрать актив":
+        
         elif text == "⬅️ Назад":
+            
                 elif text == "💱 Валюты":
 
         context.user_data["page"] = "forex"
