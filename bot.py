@@ -5,104 +5,107 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 TOKEN = os.getenv("BOT_TOKEN")
 
 
-def menu():
-    keyboard = [
+def show_menu(buttons):
+    return ReplyKeyboardMarkup(
+        buttons,
+        resize_keyboard=True
+    )
+
+
+def main_menu():
+    return show_menu([
         ["📊 Получить сигнал"],
         ["📂 Выбрать актив"],
         ["⏱ Время сделки"],
         ["⚙️ Настройки"],
         ["📜 История"]
-    ]
-    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    ])
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    context.user_data["page"] = "main"
+    context.user_data["history"] = []
+
     await update.message.reply_text(
-        "🤖 Pocket Signal Bot\n\nГлавное меню:",
-        reply_markup=menu()
+        "🤖 Pocket Signal Bot\n\n"
+        "🏠 Главное меню:",
+        reply_markup=main_menu()
     )
 
 
 async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     text = update.message.text
 
     if text == "📂 Выбрать актив":
-        keyboard = [
-            ["💱 Валюты Forex"],
-            ["₿ Криптовалюты"],
-            ["🥇 Сырьевые товары"],
-            ["📈 Индексы"],
-            ["⬅️ Назад"],
-            ["🏠 Главное меню"]
-        ]
+
+        context.user_data["page"] = "assets"
 
         await update.message.reply_text(
             "📂 Выберите раздел:",
-            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+            reply_markup=show_menu([
+                ["💱 Валюты"],
+                ["₿ Криптовалюты"],
+                ["🥇 Сырьевые товары"],
+                ["🏢 Акции"],
+                ["📈 Индексы"],
+                ["⬅️ Назад"]
+            ])
         )
 
+    elif text == "⬅️ Назад":
 
-    elif text == "⏱ Время сделки":
-        keyboard = [
-            ["30 секунд"],
-            ["1 минута"],
-            ["3 минуты"],
-            ["5 минут"],
-            ["15 минут"],
-            ["⬅️ Назад"],
-            ["🏠 Главное меню"]
-        ]
+        page = context.user_data.get("page")
 
-        await update.message.reply_text(
-            "⏱ Выберите время сделки:",
-            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        )
+        if page == "assets":
 
+            context.user_data["page"] = "main"
 
-    elif text == "⚙️ Настройки":
-        keyboard = [
-            ["💱 Сменить актив"],
-            ["⏱ Изменить время"],
-            ["📊 Стиль анализа"],
-            ["🔔 Уведомления"],
-            ["🌐 Язык"],
-            ["⬅️ Назад"],
-            ["🏠 Главное меню"]
-        ]
+            await update.message.reply_text(
+                "🏠 Главное меню:",
+                reply_markup=main_menu()
+            )
 
-        await update.message.reply_text(
-            "⚙️ Настройки:",
-            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        )
+        else:
+            await update.message.reply_text(
+                "🏠 Главное меню:",
+                reply_markup=main_menu()
+            )
 
 
     elif text == "🏠 Главное меню":
+
+        context.user_data["page"] = "main"
+
         await update.message.reply_text(
             "🏠 Главное меню:",
-            reply_markup=menu()
-        )
-
-
-    elif text == "⬅️ Назад":
-        await update.message.reply_text(
-            "🏠 Главное меню:",
-            reply_markup=menu()
+            reply_markup=main_menu()
         )
 
 
     else:
+
         await update.message.reply_text(
-            f"Вы выбрали: {text}\n\nФункция будет добавлена."
+            f"Вы нажали: {text}\n"
+            "Функция добавляется."
         )
 
 
 def main():
+
     app = Application.builder().token(TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT, handler))
+    app.add_handler(
+        CommandHandler("start", start)
+    )
+
+    app.add_handler(
+        MessageHandler(filters.TEXT, handler)
+    )
 
     print("Бот запущен")
+
     app.run_polling()
 
 
