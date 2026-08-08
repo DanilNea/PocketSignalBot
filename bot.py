@@ -113,10 +113,13 @@ def times():
 
 
 # ==========================================
-# ПОЛУЧЕНИЕ РЕАЛЬНОЙ ЦЕНЫ
+# ПОЛУЧЕНИЕ ЦЕНЫ TWELVE DATA
 # ==========================================
 
 def get_price(symbol):
+
+    if not TWELVE_DATA_API_KEY:
+        return None, "API-ключ TWELVE_DATA_API_KEY не найден в Railway."
 
     url = "https://api.twelvedata.com/price"
 
@@ -135,21 +138,25 @@ def get_price(symbol):
 
         data = response.json()
 
+        print("Twelve Data:", data)
+
         if "price" in data:
+            return data["price"], None
 
-            return data["price"]
+        code = data.get("code", "не указан")
+        message = data.get("message", "неизвестная ошибка")
 
-        return None
+        return None, f"Код {code}: {message}"
 
     except Exception as error:
 
-        print("Ошибка получения цены:", error)
+        print("Ошибка:", error)
 
-        return None
+        return None, str(error)
 
 
 # ==========================================
-# ПРЕОБРАЗОВАНИЕ НАЗВАНИЙ
+# НАЗВАНИЯ АКТИВОВ
 # ==========================================
 
 def convert_symbol(asset):
@@ -193,10 +200,13 @@ def convert_symbol(asset):
     return symbols.get(asset)
 
 
+# ==========================================
+# START
+# ==========================================
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data.clear()
-
     context.user_data["page"] = "main"
 
     await update.message.reply_text(
@@ -206,20 +216,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+# ==========================================
+# ОСНОВНОЙ ОБРАБОТЧИК
+# ==========================================
+
 async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
-
-    page = context.user_data.get(
-        "page",
-        "main"
-    )
+    page = context.user_data.get("page", "main")
 
 
-    # ==========================================
-    # ГЛАВНОЕ МЕНЮ
-    # ==========================================
-
+    # Главное меню
     if text == "🏠 Главное меню":
 
         context.user_data["page"] = "main"
@@ -232,10 +239,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # ВЫБОР АКТИВА
-    # ==========================================
-
+    # Выбор актива
     if text == "📂 Выбрать актив" or text == "📂 Изменить актив":
 
         context.user_data["page"] = "categories"
@@ -248,10 +252,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # ВАЛЮТЫ
-    # ==========================================
-
+    # Валюты
     if text == "💱 Валюты":
 
         context.user_data["page"] = "forex"
@@ -264,10 +265,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # КРИПТО
-    # ==========================================
-
+    # Криптовалюты
     if text == "₿ Криптовалюты":
 
         context.user_data["page"] = "crypto"
@@ -280,10 +278,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # СЫРЬЕ
-    # ==========================================
-
+    # Сырьевые товары
     if text == "🥇 Сырьевые товары":
 
         context.user_data["page"] = "commodities"
@@ -296,10 +291,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # АКЦИИ
-    # ==========================================
-
+    # Акции
     if text == "🏢 Акции":
 
         context.user_data["page"] = "stocks"
@@ -312,10 +304,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # ИНДЕКСЫ
-    # ==========================================
-
+    # Индексы
     if text == "📈 Индексы":
 
         context.user_data["page"] = "indexes"
@@ -328,12 +317,8 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # АКТИВЫ
-    # ==========================================
-
+    # Все активы
     assets = [
-
         "EUR/USD",
         "GBP/USD",
         "USD/JPY",
@@ -372,12 +357,11 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
 
+    # Выбор актива
     if text in assets:
 
         context.user_data["asset"] = text
-
         context.user_data["previous_page"] = page
-
         context.user_data["page"] = "time"
 
         await update.message.reply_text(
@@ -390,10 +374,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # ВРЕМЯ
-    # ==========================================
-
+    # Выбор времени
     if text in [
         "30 секунд",
         "1 минута",
@@ -403,7 +384,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]:
 
         context.user_data["time"] = text
-
         context.user_data["page"] = "selected"
 
         asset = context.user_data.get(
@@ -429,18 +409,13 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     # ==========================================
-    # РЕАЛЬНАЯ ЦЕНА
+    # ПОЛУЧИТЬ РЕАЛЬНУЮ ЦЕНУ
     # ==========================================
 
     if text == "📊 Получить сигнал":
 
-        asset = context.user_data.get(
-            "asset"
-        )
-
-        trade_time = context.user_data.get(
-            "time"
-        )
+        asset = context.user_data.get("asset")
+        trade_time = context.user_data.get("time")
 
         if not asset:
 
@@ -455,17 +430,17 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not symbol:
 
             await update.message.reply_text(
-                "⚠️ Для этого актива пока нет подключения к котировкам."
+                "⚠️ Для этого актива пока нет подключения."
             )
 
             return
 
         await update.message.reply_text(
-            f"⏳ Получаю реальные данные...\n\n"
+            f"⏳ Получаю данные рынка...\n\n"
             f"📊 {asset}"
         )
 
-        price = get_price(symbol)
+        price, error = get_price(symbol)
 
         if price:
 
@@ -475,24 +450,23 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"⏱ Время: {trade_time}\n\n"
                 f"💰 Текущая цена:\n"
                 f"{price}\n\n"
-                f"✅ Данные получены успешно.\n\n"
-                f"🔧 Следующий этап — анализ рынка."
+                f"✅ Реальные данные получены!\n\n"
+                f"Следующий этап — анализ рынка."
             )
 
         else:
 
             await update.message.reply_text(
-                "❌ Не удалось получить цену.\n\n"
-                "Проверим API-ключ и доступность инструмента."
+                f"❌ Twelve Data не вернул цену.\n\n"
+                f"Причина:\n"
+                f"{error}\n\n"
+                f"🔑 Проверь API-ключ и доступ к этому инструменту."
             )
 
         return
 
 
-    # ==========================================
-    # НАСТРОЙКИ
-    # ==========================================
-
+    # Настройки
     if text == "⚙️ Настройки":
 
         asset = context.user_data.get(
@@ -522,10 +496,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # ИСТОРИЯ
-    # ==========================================
-
+    # История
     if text == "📜 История":
 
         await update.message.reply_text(
@@ -534,6 +505,19 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ["⬅️ Назад"],
                 ["🏠 Главное меню"]
             ])
+        )
+
+        return
+
+
+    # Изменить время
+    if text == "⏱ Время сделки" or text == "⏱ Изменить время":
+
+        context.user_data["page"] = "time"
+
+        await update.message.reply_text(
+            "⏱ Выберите время:",
+            reply_markup=times()
         )
 
         return
@@ -621,55 +605,13 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        if page == "forex":
-
-            context.user_data["page"] = "categories"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=categories()
-            )
-
-            return
-
-
-        if page == "crypto":
-
-            context.user_data["page"] = "categories"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=categories()
-            )
-
-            return
-
-
-        if page == "commodities":
-
-            context.user_data["page"] = "categories"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=categories()
-            )
-
-            return
-
-
-        if page == "stocks":
-
-            context.user_data["page"] = "categories"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=categories()
-            )
-
-            return
-
-
-        if page == "indexes":
+        if page in [
+            "forex",
+            "crypto",
+            "commodities",
+            "stocks",
+            "indexes"
+        ]:
 
             context.user_data["page"] = "categories"
 
