@@ -113,13 +113,13 @@ def times():
 
 
 # ==========================================
-# ТЕКУЩАЯ ЦЕНА
+# ПОЛУЧЕНИЕ РЕАЛЬНОЙ ЦЕНЫ
 # ==========================================
 
 def get_price(symbol):
 
     if not TWELVE_DATA_API_KEY:
-        return None, "API-ключ не найден."
+        return None, "API-ключ TWELVE_DATA_API_KEY не найден в Railway."
 
     url = "https://api.twelvedata.com/price"
 
@@ -138,67 +138,28 @@ def get_price(symbol):
 
         data = response.json()
 
-        print("PRICE:", data)
+        print("Twelve Data:", data)
 
         if "price" in data:
             return data["price"], None
 
-        return None, (
-            f"Код {data.get('code', 'не указан')}: "
-            f"{data.get('message', 'неизвестная ошибка')}"
+        code = data.get("code", "не указан")
+        message = data.get(
+            "message",
+            "неизвестная ошибка"
         )
 
+        return None, f"Код {code}: {message}"
+
     except Exception as error:
+
+        print("Ошибка:", error)
 
         return None, str(error)
 
 
 # ==========================================
-# ИСТОРИЧЕСКИЕ СВЕЧИ
-# ==========================================
-
-def get_candles(symbol, interval="1min", outputsize=50):
-
-    if not TWELVE_DATA_API_KEY:
-        return None, "API-ключ не найден."
-
-    url = "https://api.twelvedata.com/time_series"
-
-    params = {
-        "symbol": symbol,
-        "interval": interval,
-        "outputsize": outputsize,
-        "apikey": TWELVE_DATA_API_KEY
-    }
-
-    try:
-
-        response = requests.get(
-            url,
-            params=params,
-            timeout=10
-        )
-
-        data = response.json()
-
-        print("CANDLES:", data)
-
-        if "values" in data:
-
-            return data["values"], None
-
-        return None, (
-            f"Код {data.get('code', 'не указан')}: "
-            f"{data.get('message', 'неизвестная ошибка')}"
-        )
-
-    except Exception as error:
-
-        return None, str(error)
-
-
-# ==========================================
-# ПРЕОБРАЗОВАНИЕ АКТИВА
+# ПРЕОБРАЗОВАНИЕ АКТИВОВ
 # ==========================================
 
 def convert_symbol(asset):
@@ -288,7 +249,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ВЫБОР АКТИВА
     # ==========================================
 
-    if text in ["📂 Выбрать актив", "📂 Изменить актив"]:
+    if text in [
+        "📂 Выбрать актив",
+        "📂 Изменить актив"
+    ]:
 
         context.user_data["page"] = "categories"
 
@@ -424,7 +388,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     # ==========================================
-    # ВРЕМЯ
+    # ВЫБОР ВРЕМЕНИ
     # ==========================================
 
     if text in [
@@ -495,76 +459,29 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-        # Текущая цена
-        price, price_error = get_price(symbol)
+        price, error = get_price(symbol)
 
 
-        # Свечи
-        candles, candles_error = get_candles(
-            symbol,
-            interval="1min",
-            outputsize=50
-        )
-
-
-        # Проверка цены
-        if not price:
+        if price:
 
             await update.message.reply_text(
-                f"❌ Не удалось получить цену.\n\n"
-                f"Причина:\n"
-                f"{price_error}"
+                f"📊 РЫНОЧНЫЕ ДАННЫЕ\n\n"
+                f"Актив: {asset}\n"
+                f"⏱ Время: {trade_time}\n\n"
+                f"💰 Текущая цена:\n"
+                f"{price}\n\n"
+                f"✅ Реальные данные получены!\n\n"
+                f"Следующий этап — анализ рынка."
             )
 
-            return
-
-
-        # Проверка свечей
-        if not candles:
+        else:
 
             await update.message.reply_text(
-                f"❌ Цена получена, но свечи не получены.\n\n"
+                f"❌ Twelve Data не вернул цену.\n\n"
                 f"Причина:\n"
-                f"{candles_error}"
+                f"{error}\n\n"
+                f"🔑 Проверь API-ключ и доступ к этому инструменту."
             )
-
-            return
-
-
-        # ======================================
-        # ТЕСТ СВЕЧЕЙ
-        # ======================================
-
-        first_candle = candles[0]
-
-        last_candle = candles[-1]
-
-        await update.message.reply_text(
-            f"📊 ДАННЫЕ РЫНКА ПОЛУЧЕНЫ\n\n"
-
-            f"Актив: {asset}\n"
-            f"⏱ Время: {trade_time}\n\n"
-
-            f"💰 Текущая цена:\n"
-            f"{price}\n\n"
-
-            f"🕯 Свечей получено:\n"
-            f"{len(candles)}\n\n"
-
-            f"Последняя свеча:\n"
-            f"🕐 {first_candle.get('datetime')}\n"
-            f"Open: {first_candle.get('open')}\n"
-            f"High: {first_candle.get('high')}\n"
-            f"Low: {first_candle.get('low')}\n"
-            f"Close: {first_candle.get('close')}\n\n"
-
-            f"Старая свеча:\n"
-            f"🕐 {last_candle.get('datetime')}\n"
-            f"Close: {last_candle.get('close')}\n\n"
-
-            f"✅ 50 исторических свечей получены.\n\n"
-            f"🔧 Следующий этап — анализ."
-        )
 
         return
 
@@ -620,7 +537,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     # ==========================================
-    # ИЗМЕНЕНИЕ ВРЕМЕНИ
+    # ИЗМЕНИТЬ ВРЕМЯ
     # ==========================================
 
     if text in [
@@ -766,7 +683,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==========================================
-# ЗАПУСК
+# ЗАПУСК БОТА
 # ==========================================
 
 def main():
