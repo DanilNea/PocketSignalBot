@@ -9,6 +9,10 @@ TOKEN = os.getenv("BOT_TOKEN")
 TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
 
+# ==========================================
+# КЛАВИАТУРЫ
+# ==========================================
+
 def menu(buttons):
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
@@ -113,13 +117,13 @@ def times():
 
 
 # ==========================================
-# ПОЛУЧЕНИЕ РЕАЛЬНОЙ ЦЕНЫ
+# ТЕКУЩАЯ ЦЕНА
 # ==========================================
 
 def get_price(symbol):
 
     if not TWELVE_DATA_API_KEY:
-        return None, "API-ключ TWELVE_DATA_API_KEY не найден в Railway."
+        return None, "TWELVE_DATA_API_KEY не найден."
 
     url = "https://api.twelvedata.com/price"
 
@@ -138,28 +142,64 @@ def get_price(symbol):
 
         data = response.json()
 
-        print("Twelve Data:", data)
+        print("PRICE:", data)
 
         if "price" in data:
             return data["price"], None
 
-        code = data.get("code", "не указан")
-        message = data.get(
-            "message",
-            "неизвестная ошибка"
+        return None, (
+            f"{data.get('message', 'Неизвестная ошибка')}"
         )
 
-        return None, f"Код {code}: {message}"
-
     except Exception as error:
-
-        print("Ошибка:", error)
 
         return None, str(error)
 
 
 # ==========================================
-# ПРЕОБРАЗОВАНИЕ АКТИВОВ
+# 7.1 — ПОЛУЧЕНИЕ ИСТОРИЧЕСКИХ СВЕЧЕЙ
+# ==========================================
+
+def get_candles(symbol, interval="1min", outputsize=50):
+
+    if not TWELVE_DATA_API_KEY:
+        return None, "TWELVE_DATA_API_KEY не найден."
+
+    url = "https://api.twelvedata.com/time_series"
+
+    params = {
+        "symbol": symbol,
+        "interval": interval,
+        "outputsize": outputsize,
+        "apikey": TWELVE_DATA_API_KEY
+    }
+
+    try:
+
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
+
+        data = response.json()
+
+        print("CANDLES:", data)
+
+        if "values" in data:
+            return data["values"], None
+
+        return None, (
+            f"{data.get('message', 'Свечи не получены')}"
+        )
+
+    except Exception as error:
+
+        return None, str(error)
+
+
+# ==========================================
+# АКТИВЫ
 # ==========================================
 
 def convert_symbol(asset):
@@ -229,9 +269,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     page = context.user_data.get("page", "main")
 
 
-    # ==========================================
+    # ======================================
     # ГЛАВНОЕ МЕНЮ
-    # ==========================================
+    # ======================================
 
     if text == "🏠 Главное меню":
 
@@ -245,9 +285,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
+    # ======================================
     # ВЫБОР АКТИВА
-    # ==========================================
+    # ======================================
 
     if text in [
         "📂 Выбрать актив",
@@ -264,9 +304,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
+    # ======================================
     # КАТЕГОРИИ
-    # ==========================================
+    # ======================================
 
     if text == "💱 Валюты":
 
@@ -328,9 +368,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # АКТИВЫ
-    # ==========================================
+    # ======================================
+    # СПИСОК АКТИВОВ
+    # ======================================
 
     assets = [
         "EUR/USD",
@@ -387,9 +427,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # ВЫБОР ВРЕМЕНИ
-    # ==========================================
+    # ======================================
+    # ВРЕМЯ
+    # ======================================
 
     if text in [
         "30 секунд",
@@ -410,8 +450,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"✅ Настройки сохранены!\n\n"
             f"📊 Актив: {asset}\n"
-            f"⏱ Время: {text}\n\n"
-            f"📊 Можно получать сигнал.",
+            f"⏱ Время: {text}",
             reply_markup=menu([
                 ["📊 Получить сигнал"],
                 ["📂 Изменить актив"],
@@ -424,9 +463,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
-    # ПОЛУЧИТЬ СИГНАЛ
-    # ==========================================
+    # ======================================
+    # 7.1 — ПОЛУЧИТЬ ЦЕНУ + СВЕЧИ
+    # ======================================
 
     if text == "📊 Получить сигнал":
 
@@ -459,36 +498,90 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-        price, error = get_price(symbol)
+        # Получаем текущую цену
+        price, price_error = get_price(symbol)
 
 
-        if price:
+        if not price:
 
             await update.message.reply_text(
-                f"📊 РЫНОЧНЫЕ ДАННЫЕ\n\n"
-                f"Актив: {asset}\n"
-                f"⏱ Время: {trade_time}\n\n"
-                f"💰 Текущая цена:\n"
-                f"{price}\n\n"
-                f"✅ Реальные данные получены!\n\n"
-                f"Следующий этап — анализ рынка."
+                f"❌ Не удалось получить цену.\n\n"
+                f"{price_error}"
             )
 
-        else:
+            return
+
+
+        # Получаем 50 свечей
+        candles, candles_error = get_candles(
+            symbol,
+            interval="1min",
+            outputsize=50
+        )
+
+
+        if not candles:
 
             await update.message.reply_text(
-                f"❌ Twelve Data не вернул цену.\n\n"
+                f"❌ Цена получена, но свечи не получены.\n\n"
                 f"Причина:\n"
-                f"{error}\n\n"
-                f"🔑 Проверь API-ключ и доступ к этому инструменту."
+                f"{candles_error}"
             )
+
+            return
+
+
+        # ==================================
+        # ПОКАЗЫВАЕМ РЕЗУЛЬТАТ
+        # ==================================
+
+        latest = candles[0]
+
+        oldest = candles[-1]
+
+
+        message = (
+            f"📊 ДАННЫЕ РЫНКА\n\n"
+            f"Актив: {asset}\n"
+            f"⏱ Время сделки: {trade_time}\n\n"
+            f"💰 Текущая цена:\n"
+            f"{price}\n\n"
+            f"🕯 Получено свечей: {len(candles)}\n\n"
+            f"━━ Последняя свеча ━━\n"
+            f"🕐 {latest.get('datetime')}\n"
+            f"Open: {latest.get('open')}\n"
+            f"High: {latest.get('high')}\n"
+            f"Low: {latest.get('low')}\n"
+            f"Close: {latest.get('close')}\n\n"
+            f"━━ Самая старая свеча ━━\n"
+            f"🕐 {oldest.get('datetime')}\n"
+            f"Open: {oldest.get('open')}\n"
+            f"High: {oldest.get('high')}\n"
+            f"Low: {oldest.get('low')}\n"
+            f"Close: {oldest.get('close')}\n\n"
+            f"✅ 7.1 работает.\n"
+            f"🕯️ Исторические свечи получены.\n\n"
+            f"⏭ Следующий этап: EMA + RSI."
+        )
+
+
+        await update.message.reply_text(
+            message,
+            reply_markup=menu([
+                ["📊 Получить сигнал"],
+                ["📂 Изменить актив"],
+                ["⏱ Изменить время"],
+                ["⬅️ Назад"],
+                ["🏠 Главное меню"]
+            ])
+        )
 
         return
 
 
-    # ==========================================
+    # ======================================
     # НАСТРОЙКИ
-    # ==========================================
+    # ======================================
 
     if text == "⚙️ Настройки":
 
@@ -519,9 +612,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
+    # ======================================
     # ИСТОРИЯ
-    # ==========================================
+    # ======================================
 
     if text == "📜 История":
 
@@ -536,9 +629,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
+    # ======================================
     # ИЗМЕНИТЬ ВРЕМЯ
-    # ==========================================
+    # ======================================
 
     if text in [
         "⏱ Время сделки",
@@ -555,9 +648,9 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # ==========================================
+    # ======================================
     # НАЗАД
-    # ==========================================
+    # ======================================
 
     if text == "⬅️ Назад":
 
@@ -683,10 +776,16 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ==========================================
-# ЗАПУСК БОТА
+# ЗАПУСК
 # ==========================================
 
 def main():
+
+    if not TOKEN:
+        print("ОШИБКА: BOT_TOKEN не найден.")
+
+    if not TWELVE_DATA_API_KEY:
+        print("ОШИБКА: TWELVE_DATA_API_KEY не найден.")
 
     app = Application.builder().token(TOKEN).build()
 
@@ -701,7 +800,7 @@ def main():
         )
     )
 
-    print("Бот запущен")
+    print("🤖 Бот запущен")
 
     app.run_polling()
 
