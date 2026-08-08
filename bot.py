@@ -5,15 +5,12 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 TOKEN = os.getenv("BOT_TOKEN")
 
 
-def show_menu(buttons):
-    return ReplyKeyboardMarkup(
-        buttons,
-        resize_keyboard=True
-    )
+def menu(buttons):
+    return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
 
 def main_menu():
-    return show_menu([
+    return menu([
         ["📊 Получить сигнал"],
         ["📂 Выбрать актив"],
         ["⏱ Время сделки"],
@@ -22,8 +19,8 @@ def main_menu():
     ])
 
 
-def asset_categories_menu():
-    return show_menu([
+def categories():
+    return menu([
         ["💱 Валюты"],
         ["₿ Криптовалюты"],
         ["🥇 Сырьевые товары"],
@@ -33,8 +30,8 @@ def asset_categories_menu():
     ])
 
 
-def forex_menu():
-    return show_menu([
+def forex():
+    return menu([
         ["EUR/USD"],
         ["GBP/USD"],
         ["USD/JPY"],
@@ -46,8 +43,8 @@ def forex_menu():
     ])
 
 
-def crypto_menu():
-    return show_menu([
+def crypto():
+    return menu([
         ["BTC/USDT"],
         ["ETH/USDT"],
         ["BNB/USDT"],
@@ -60,8 +57,8 @@ def crypto_menu():
     ])
 
 
-def commodities_menu():
-    return show_menu([
+def commodities():
+    return menu([
         ["🥇 Gold XAU/USD"],
         ["🥈 Silver XAG/USD"],
         ["🛢 Oil WTI"],
@@ -72,8 +69,8 @@ def commodities_menu():
     ])
 
 
-def stocks_menu():
-    return show_menu([
+def stocks():
+    return menu([
         ["Apple"],
         ["Tesla"],
         ["Microsoft"],
@@ -86,8 +83,8 @@ def stocks_menu():
     ])
 
 
-def indexes_menu():
-    return show_menu([
+def indexes():
+    return menu([
         ["NASDAQ"],
         ["S&P 500"],
         ["Dow Jones"],
@@ -99,8 +96,8 @@ def indexes_menu():
     ])
 
 
-def time_menu():
-    return show_menu([
+def times():
+    return menu([
         ["30 секунд"],
         ["1 минута"],
         ["3 минуты"],
@@ -113,11 +110,11 @@ def time_menu():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
+    context.user_data.clear()
     context.user_data["page"] = "main"
 
     await update.message.reply_text(
-        "🤖 Pocket Signal Bot\n\n"
-        "🏠 Главное меню:",
+        "🤖 Pocket Signal Bot\n\n🏠 Главное меню",
         reply_markup=main_menu()
     )
 
@@ -128,171 +125,124 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     page = context.user_data.get("page", "main")
 
 
-    # =========================
-    # ГЛАВНОЕ МЕНЮ
-    # =========================
-
+    # Главное меню
     if text == "🏠 Главное меню":
 
         context.user_data["page"] = "main"
 
         await update.message.reply_text(
-            "🏠 Главное меню:",
+            "🏠 Главное меню",
             reply_markup=main_menu()
         )
 
         return
 
 
-    # =========================
-    # ВЫБОР АКТИВА
-    # =========================
-
+    # Выбор актива
     if text == "📂 Выбрать актив" or text == "📂 Изменить актив":
 
-        context.user_data["page"] = "assets"
+        context.user_data["page"] = "categories"
 
         await update.message.reply_text(
             "📂 Выберите раздел:",
-            reply_markup=asset_categories_menu()
+            reply_markup=categories()
         )
 
         return
 
 
-    # =========================
-    # ВАЛЮТЫ
-    # =========================
-
+    # Валюты
     if text == "💱 Валюты":
 
         context.user_data["page"] = "forex"
 
         await update.message.reply_text(
             "💱 Выберите валютную пару:",
-            reply_markup=forex_menu()
+            reply_markup=forex()
         )
 
         return
 
 
-    # =========================
-    # КРИПТОВАЛЮТЫ
-    # =========================
-
+    # Криптовалюты
     if text == "₿ Криптовалюты":
 
         context.user_data["page"] = "crypto"
 
         await update.message.reply_text(
             "₿ Выберите криптовалюту:",
-            reply_markup=crypto_menu()
+            reply_markup=crypto()
         )
 
         return
 
 
-    # =========================
-    # СЫРЬЕ
-    # =========================
-
+    # Сырьевые товары
     if text == "🥇 Сырьевые товары":
 
         context.user_data["page"] = "commodities"
 
         await update.message.reply_text(
             "🥇 Выберите сырьевой товар:",
-            reply_markup=commodities_menu()
+            reply_markup=commodities()
         )
 
         return
 
 
-    # =========================
-    # АКЦИИ
-    # =========================
-
+    # Акции
     if text == "🏢 Акции":
 
         context.user_data["page"] = "stocks"
 
         await update.message.reply_text(
             "🏢 Выберите акцию:",
-            reply_markup=stocks_menu()
+            reply_markup=stocks()
         )
 
         return
 
 
-    # =========================
-    # ИНДЕКСЫ
-    # =========================
-
+    # Индексы
     if text == "📈 Индексы":
 
         context.user_data["page"] = "indexes"
 
         await update.message.reply_text(
             "📈 Выберите индекс:",
-            reply_markup=indexes_menu()
+            reply_markup=indexes()
         )
 
         return
 
 
-    # =========================
-    # СПИСОК АКТИВОВ
-    # =========================
-
+    # Все активы
     assets = [
-        "EUR/USD",
-        "GBP/USD",
-        "USD/JPY",
-        "AUD/USD",
-        "USD/CAD",
-        "USD/CHF",
+        "EUR/USD", "GBP/USD", "USD/JPY",
+        "AUD/USD", "USD/CAD", "USD/CHF",
 
-        "BTC/USDT",
-        "ETH/USDT",
-        "BNB/USDT",
-        "SOL/USDT",
-        "XRP/USDT",
-        "ADA/USDT",
+        "BTC/USDT", "ETH/USDT", "BNB/USDT",
+        "SOL/USDT", "XRP/USDT", "ADA/USDT",
         "DOGE/USDT",
 
-        "🥇 Gold XAU/USD",
-        "🥈 Silver XAG/USD",
-        "🛢 Oil WTI",
-        "🛢 Oil Brent",
-        "🔥 Natural Gas",
+        "🥇 Gold XAU/USD", "🥈 Silver XAG/USD",
+        "🛢 Oil WTI", "🛢 Oil Brent", "🔥 Natural Gas",
 
-        "Apple",
-        "Tesla",
-        "Microsoft",
-        "Amazon",
-        "Google",
-        "NVIDIA",
-        "Meta",
+        "Apple", "Tesla", "Microsoft", "Amazon",
+        "Google", "NVIDIA", "Meta",
 
-        "NASDAQ",
-        "S&P 500",
-        "Dow Jones",
-        "DAX",
-        "FTSE 100",
-        "Nikkei 225"
+        "NASDAQ", "S&P 500", "Dow Jones",
+        "DAX", "FTSE 100", "Nikkei 225"
     ]
 
 
-    # =========================
-    # ВЫБОР АКТИВА
-    # =========================
-
+    # Выбрали актив
     if text in assets:
 
         context.user_data["asset"] = text
 
-        # Запоминаем страницу, с которой пришли
-        context.user_data["asset_page"] = page
+        # Очень важно: запоминаем предыдущий экран
+        context.user_data["previous_page"] = page
 
         context.user_data["page"] = "time"
 
@@ -300,42 +250,35 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"✅ Актив выбран:\n\n"
             f"📊 {text}\n\n"
             f"⏱ Выберите время сделки:",
-            reply_markup=time_menu()
+            reply_markup=times()
         )
 
         return
 
 
-    # =========================
-    # ВЫБОР ВРЕМЕНИ
-    # =========================
-
-    times = [
+    # Выбрали время
+    if text in [
         "30 секунд",
         "1 минута",
         "3 минуты",
         "5 минут",
         "15 минут"
-    ]
-
-
-    if text in times:
+    ]:
 
         context.user_data["time"] = text
+        context.user_data["page"] = "selected"
 
         asset = context.user_data.get(
             "asset",
             "не выбран"
         )
 
-        context.user_data["page"] = "selected"
-
         await update.message.reply_text(
             f"✅ Настройки сохранены!\n\n"
             f"📊 Актив: {asset}\n"
             f"⏱ Время: {text}\n\n"
-            f"📊 Теперь можно получать сигнал.",
-            reply_markup=show_menu([
+            f"📊 Можно получать сигнал.",
+            reply_markup=menu([
                 ["📊 Получить сигнал"],
                 ["📂 Изменить актив"],
                 ["⏱ Изменить время"],
@@ -347,27 +290,44 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # =========================
-    # ИЗМЕНИТЬ ВРЕМЯ
-    # =========================
-
+    # Время сделки из главного меню
     if text == "⏱ Время сделки" or text == "⏱ Изменить время":
 
-        context.user_data["time_page"] = page
         context.user_data["page"] = "time"
 
         await update.message.reply_text(
-            "⏱ Выберите время сделки:",
-            reply_markup=time_menu()
+            "⏱ Выберите время:",
+            reply_markup=times()
         )
 
         return
 
 
-    # =========================
-    # НАСТРОЙКИ
-    # =========================
+    # Получить сигнал
+    if text == "📊 Получить сигнал":
 
+        asset = context.user_data.get(
+            "asset",
+            "не выбран"
+        )
+
+        trade_time = context.user_data.get(
+            "time",
+            "не выбрано"
+        )
+
+        await update.message.reply_text(
+            f"📊 Параметры:\n\n"
+            f"📊 Актив: {asset}\n"
+            f"⏱ Время: {trade_time}\n\n"
+            f"⏳ Анализ рынка...\n\n"
+            f"⚠️ Реальный сигнал пока не подключён."
+        )
+
+        return
+
+
+    # Настройки
     if text == "⚙️ Настройки":
 
         asset = context.user_data.get(
@@ -386,7 +346,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"⚙️ Настройки\n\n"
             f"📊 Актив: {asset}\n"
             f"⏱ Время: {trade_time}",
-            reply_markup=show_menu([
+            reply_markup=menu([
                 ["📂 Изменить актив"],
                 ["⏱ Изменить время"],
                 ["⬅️ Назад"],
@@ -397,42 +357,12 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # =========================
-    # ПОЛУЧИТЬ СИГНАЛ
-    # =========================
-
-    if text == "📊 Получить сигнал":
-
-        asset = context.user_data.get(
-            "asset",
-            "не выбран"
-        )
-
-        trade_time = context.user_data.get(
-            "time",
-            "не выбрано"
-        )
-
-        await update.message.reply_text(
-            f"📊 Параметры сигнала:\n\n"
-            f"📊 Актив: {asset}\n"
-            f"⏱ Время: {trade_time}\n\n"
-            f"⏳ Анализ рынка...\n\n"
-            f"⚠️ Реальный сигнал пока не подключен."
-        )
-
-        return
-
-
-    # =========================
-    # ИСТОРИЯ
-    # =========================
-
+    # История
     if text == "📜 История":
 
         await update.message.reply_text(
             "📜 История сигналов пока пустая.",
-            reply_markup=show_menu([
+            reply_markup=menu([
                 ["⬅️ Назад"],
                 ["🏠 Главное меню"]
             ])
@@ -447,169 +377,161 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if text == "⬅️ Назад":
 
-        # Если мы на выборе времени
+        # Если были на выборе времени
         if page == "time":
 
-            previous_page = context.user_data.get(
-                "asset_page",
-                "assets"
+            previous = context.user_data.get(
+                "previous_page",
+                "categories"
             )
 
-            if previous_page == "forex":
+            if previous == "forex":
 
                 context.user_data["page"] = "forex"
 
                 await update.message.reply_text(
                     "💱 Выберите валютную пару:",
-                    reply_markup=forex_menu()
+                    reply_markup=forex()
                 )
 
-            elif previous_page == "crypto":
+            elif previous == "crypto":
 
                 context.user_data["page"] = "crypto"
 
                 await update.message.reply_text(
                     "₿ Выберите криптовалюту:",
-                    reply_markup=crypto_menu()
+                    reply_markup=crypto()
                 )
 
-            elif previous_page == "commodities":
+            elif previous == "commodities":
 
                 context.user_data["page"] = "commodities"
 
                 await update.message.reply_text(
                     "🥇 Выберите сырьевой товар:",
-                    reply_markup=commodities_menu()
+                    reply_markup=commodities()
                 )
 
-            elif previous_page == "stocks":
+            elif previous == "stocks":
 
                 context.user_data["page"] = "stocks"
 
                 await update.message.reply_text(
                     "🏢 Выберите акцию:",
-                    reply_markup=stocks_menu()
+                    reply_markup=stocks()
                 )
 
-            elif previous_page == "indexes":
+            elif previous == "indexes":
 
                 context.user_data["page"] = "indexes"
 
                 await update.message.reply_text(
                     "📈 Выберите индекс:",
-                    reply_markup=indexes_menu()
+                    reply_markup=indexes()
                 )
 
             else:
 
-                context.user_data["page"] = "assets"
+                context.user_data["page"] = "categories"
 
                 await update.message.reply_text(
                     "📂 Выберите раздел:",
-                    reply_markup=asset_categories_menu()
+                    reply_markup=categories()
                 )
 
             return
 
 
-        # Если мы на выборе валют
-        if page == "forex":
-
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-            return
-
-
-        # Если мы на выборе криптовалют
-        if page == "crypto":
-
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-            return
-
-
-        # Если мы на выборе сырья
-        if page == "commodities":
-
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-            return
-
-
-        # Если мы на выборе акций
-        if page == "stocks":
-
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-            return
-
-
-        # Если мы на выборе индексов
-        if page == "indexes":
-
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-            return
-
-
-        # Если мы после сохранения настроек
+        # После выбора времени
         if page == "selected":
+
+            previous = context.user_data.get(
+                "previous_page",
+                "forex"
+            )
 
             context.user_data["page"] = "time"
 
             await update.message.reply_text(
-                "⏱ Выберите время сделки:",
-                reply_markup=time_menu()
+                "⏱ Выберите время:",
+                reply_markup=times()
             )
 
             return
 
 
-        # Если мы в настройках
-        if page == "settings":
+        # Валюты → категории
+        if page == "forex":
 
-            context.user_data["page"] = "main"
+            context.user_data["page"] = "categories"
 
             await update.message.reply_text(
-                "🏠 Главное меню:",
-                reply_markup=main_menu()
+                "📂 Выберите раздел:",
+                reply_markup=categories()
             )
 
             return
 
 
-        # Если мы в выборе раздела
-        if page == "assets":
+        # Криптовалюты → категории
+        if page == "crypto":
+
+            context.user_data["page"] = "categories"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=categories()
+            )
+
+            return
+
+
+        # Сырьё → категории
+        if page == "commodities":
+
+            context.user_data["page"] = "categories"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=categories()
+            )
+
+            return
+
+
+        # Акции → категории
+        if page == "stocks":
+
+            context.user_data["page"] = "categories"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=categories()
+            )
+
+            return
+
+
+        # Индексы → категории
+        if page == "indexes":
+
+            context.user_data["page"] = "categories"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=categories()
+            )
+
+            return
+
+
+        # Категории → главное меню
+        if page == "categories":
 
             context.user_data["page"] = "main"
 
             await update.message.reply_text(
-                "🏠 Главное меню:",
+                "🏠 Главное меню",
                 reply_markup=main_menu()
             )
 
@@ -620,7 +542,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["page"] = "main"
 
         await update.message.reply_text(
-            "🏠 Главное меню:",
+            "🏠 Главное меню",
             reply_markup=main_menu()
         )
 
@@ -654,15 +576,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-После сохранения проверь именно:
-
-📂 Выбрать актив → 💱 Валюты → EUR/USD → 5 минут → ⬅️ Назад
-
-Теперь должно вернуть к списку валют.
-
-Потом ещё раз ⬅️ Назад → к выбору раздела активов.
-
-И ещё раз ⬅️ Назад → главное меню.
-
-Если это заработает — навигацию считаем готовой и переходим к следующему большому этапу: реальные рыночные данные и система анализа сигналов.
