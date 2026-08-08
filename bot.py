@@ -1,8 +1,12 @@
 import os
+import requests
+
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
+
 TOKEN = os.getenv("BOT_TOKEN")
+TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
 
 def menu(buttons):
@@ -108,13 +112,96 @@ def times():
     ])
 
 
+# ==========================================
+# ПОЛУЧЕНИЕ РЕАЛЬНОЙ ЦЕНЫ
+# ==========================================
+
+def get_price(symbol):
+
+    url = "https://api.twelvedata.com/price"
+
+    params = {
+        "symbol": symbol,
+        "apikey": TWELVE_DATA_API_KEY
+    }
+
+    try:
+
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
+
+        data = response.json()
+
+        if "price" in data:
+
+            return data["price"]
+
+        return None
+
+    except Exception as error:
+
+        print("Ошибка получения цены:", error)
+
+        return None
+
+
+# ==========================================
+# ПРЕОБРАЗОВАНИЕ НАЗВАНИЙ
+# ==========================================
+
+def convert_symbol(asset):
+
+    symbols = {
+
+        "EUR/USD": "EUR/USD",
+        "GBP/USD": "GBP/USD",
+        "USD/JPY": "USD/JPY",
+        "AUD/USD": "AUD/USD",
+        "USD/CAD": "USD/CAD",
+        "USD/CHF": "USD/CHF",
+
+        "BTC/USDT": "BTC/USD",
+        "ETH/USDT": "ETH/USD",
+        "BNB/USDT": "BNB/USD",
+        "SOL/USDT": "SOL/USD",
+        "XRP/USDT": "XRP/USD",
+        "ADA/USDT": "ADA/USD",
+        "DOGE/USDT": "DOGE/USD",
+
+        "🥇 Gold XAU/USD": "XAU/USD",
+        "🥈 Silver XAG/USD": "XAG/USD",
+
+        "Apple": "AAPL",
+        "Tesla": "TSLA",
+        "Microsoft": "MSFT",
+        "Amazon": "AMZN",
+        "Google": "GOOGL",
+        "NVIDIA": "NVDA",
+        "Meta": "META",
+
+        "NASDAQ": "IXIC",
+        "S&P 500": "SPX",
+        "Dow Jones": "DJI",
+        "DAX": "DAX",
+        "FTSE 100": "FTSE",
+        "Nikkei 225": "NI225"
+    }
+
+    return symbols.get(asset)
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data.clear()
+
     context.user_data["page"] = "main"
 
     await update.message.reply_text(
-        "🤖 Pocket Signal Bot\n\n🏠 Главное меню",
+        "🤖 Pocket Signal Bot\n\n"
+        "🏠 Главное меню",
         reply_markup=main_menu()
     )
 
@@ -122,10 +209,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
-    page = context.user_data.get("page", "main")
+
+    page = context.user_data.get(
+        "page",
+        "main"
+    )
 
 
-    # Главное меню
+    # ==========================================
+    # ГЛАВНОЕ МЕНЮ
+    # ==========================================
+
     if text == "🏠 Главное меню":
 
         context.user_data["page"] = "main"
@@ -138,7 +232,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Выбор актива
+    # ==========================================
+    # ВЫБОР АКТИВА
+    # ==========================================
+
     if text == "📂 Выбрать актив" or text == "📂 Изменить актив":
 
         context.user_data["page"] = "categories"
@@ -151,7 +248,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Валюты
+    # ==========================================
+    # ВАЛЮТЫ
+    # ==========================================
+
     if text == "💱 Валюты":
 
         context.user_data["page"] = "forex"
@@ -164,7 +264,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Криптовалюты
+    # ==========================================
+    # КРИПТО
+    # ==========================================
+
     if text == "₿ Криптовалюты":
 
         context.user_data["page"] = "crypto"
@@ -177,7 +280,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Сырьевые товары
+    # ==========================================
+    # СЫРЬЕ
+    # ==========================================
+
     if text == "🥇 Сырьевые товары":
 
         context.user_data["page"] = "commodities"
@@ -190,7 +296,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Акции
+    # ==========================================
+    # АКЦИИ
+    # ==========================================
+
     if text == "🏢 Акции":
 
         context.user_data["page"] = "stocks"
@@ -203,7 +312,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Индексы
+    # ==========================================
+    # ИНДЕКСЫ
+    # ==========================================
+
     if text == "📈 Индексы":
 
         context.user_data["page"] = "indexes"
@@ -216,32 +328,54 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Все активы
-    assets = [
-        "EUR/USD", "GBP/USD", "USD/JPY",
-        "AUD/USD", "USD/CAD", "USD/CHF",
+    # ==========================================
+    # АКТИВЫ
+    # ==========================================
 
-        "BTC/USDT", "ETH/USDT", "BNB/USDT",
-        "SOL/USDT", "XRP/USDT", "ADA/USDT",
+    assets = [
+
+        "EUR/USD",
+        "GBP/USD",
+        "USD/JPY",
+        "AUD/USD",
+        "USD/CAD",
+        "USD/CHF",
+
+        "BTC/USDT",
+        "ETH/USDT",
+        "BNB/USDT",
+        "SOL/USDT",
+        "XRP/USDT",
+        "ADA/USDT",
         "DOGE/USDT",
 
-        "🥇 Gold XAU/USD", "🥈 Silver XAG/USD",
-        "🛢 Oil WTI", "🛢 Oil Brent", "🔥 Natural Gas",
+        "🥇 Gold XAU/USD",
+        "🥈 Silver XAG/USD",
+        "🛢 Oil WTI",
+        "🛢 Oil Brent",
+        "🔥 Natural Gas",
 
-        "Apple", "Tesla", "Microsoft", "Amazon",
-        "Google", "NVIDIA", "Meta",
+        "Apple",
+        "Tesla",
+        "Microsoft",
+        "Amazon",
+        "Google",
+        "NVIDIA",
+        "Meta",
 
-        "NASDAQ", "S&P 500", "Dow Jones",
-        "DAX", "FTSE 100", "Nikkei 225"
+        "NASDAQ",
+        "S&P 500",
+        "Dow Jones",
+        "DAX",
+        "FTSE 100",
+        "Nikkei 225"
     ]
 
 
-    # Выбрали актив
     if text in assets:
 
         context.user_data["asset"] = text
 
-        # Очень важно: запоминаем предыдущий экран
         context.user_data["previous_page"] = page
 
         context.user_data["page"] = "time"
@@ -256,7 +390,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Выбрали время
+    # ==========================================
+    # ВРЕМЯ
+    # ==========================================
+
     if text in [
         "30 секунд",
         "1 минута",
@@ -266,6 +403,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]:
 
         context.user_data["time"] = text
+
         context.user_data["page"] = "selected"
 
         asset = context.user_data.get(
@@ -290,44 +428,71 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # Время сделки из главного меню
-    if text == "⏱ Время сделки" or text == "⏱ Изменить время":
+    # ==========================================
+    # РЕАЛЬНАЯ ЦЕНА
+    # ==========================================
 
-        context.user_data["page"] = "time"
-
-        await update.message.reply_text(
-            "⏱ Выберите время:",
-            reply_markup=times()
-        )
-
-        return
-
-
-    # Получить сигнал
     if text == "📊 Получить сигнал":
 
         asset = context.user_data.get(
-            "asset",
-            "не выбран"
+            "asset"
         )
 
         trade_time = context.user_data.get(
-            "time",
-            "не выбрано"
+            "time"
         )
 
+        if not asset:
+
+            await update.message.reply_text(
+                "⚠️ Сначала выберите актив."
+            )
+
+            return
+
+        symbol = convert_symbol(asset)
+
+        if not symbol:
+
+            await update.message.reply_text(
+                "⚠️ Для этого актива пока нет подключения к котировкам."
+            )
+
+            return
+
         await update.message.reply_text(
-            f"📊 Параметры:\n\n"
-            f"📊 Актив: {asset}\n"
-            f"⏱ Время: {trade_time}\n\n"
-            f"⏳ Анализ рынка...\n\n"
-            f"⚠️ Реальный сигнал пока не подключён."
+            f"⏳ Получаю реальные данные...\n\n"
+            f"📊 {asset}"
         )
+
+        price = get_price(symbol)
+
+        if price:
+
+            await update.message.reply_text(
+                f"📊 РЫНОЧНЫЕ ДАННЫЕ\n\n"
+                f"Актив: {asset}\n"
+                f"⏱ Время: {trade_time}\n\n"
+                f"💰 Текущая цена:\n"
+                f"{price}\n\n"
+                f"✅ Данные получены успешно.\n\n"
+                f"🔧 Следующий этап — анализ рынка."
+            )
+
+        else:
+
+            await update.message.reply_text(
+                "❌ Не удалось получить цену.\n\n"
+                "Проверим API-ключ и доступность инструмента."
+            )
 
         return
 
 
-    # Настройки
+    # ==========================================
+    # НАСТРОЙКИ
+    # ==========================================
+
     if text == "⚙️ Настройки":
 
         asset = context.user_data.get(
@@ -357,7 +522,10 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # История
+    # ==========================================
+    # ИСТОРИЯ
+    # ==========================================
+
     if text == "📜 История":
 
         await update.message.reply_text(
@@ -371,13 +539,12 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # =========================
+    # ==========================================
     # НАЗАД
-    # =========================
+    # ==========================================
 
     if text == "⬅️ Назад":
 
-        # Если были на выборе времени
         if page == "time":
 
             previous = context.user_data.get(
@@ -442,13 +609,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        # После выбора времени
         if page == "selected":
-
-            previous = context.user_data.get(
-                "previous_page",
-                "forex"
-            )
 
             context.user_data["page"] = "time"
 
@@ -460,7 +621,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        # Валюты → категории
         if page == "forex":
 
             context.user_data["page"] = "categories"
@@ -473,7 +633,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        # Криптовалюты → категории
         if page == "crypto":
 
             context.user_data["page"] = "categories"
@@ -486,7 +645,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        # Сырьё → категории
         if page == "commodities":
 
             context.user_data["page"] = "categories"
@@ -499,7 +657,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        # Акции → категории
         if page == "stocks":
 
             context.user_data["page"] = "categories"
@@ -512,7 +669,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        # Индексы → категории
         if page == "indexes":
 
             context.user_data["page"] = "categories"
@@ -525,7 +681,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        # Категории → главное меню
         if page == "categories":
 
             context.user_data["page"] = "main"
@@ -538,7 +693,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
 
-        # В остальных случаях
         context.user_data["page"] = "main"
 
         await update.message.reply_text(
