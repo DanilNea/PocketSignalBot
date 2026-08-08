@@ -241,7 +241,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     # =========================
-    # ВЫБОР АКТИВА
+    # СПИСОК АКТИВОВ
     # =========================
 
     assets = [
@@ -282,10 +282,18 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Nikkei 225"
     ]
 
+
+    # =========================
+    # ВЫБОР АКТИВА
+    # =========================
+
     if text in assets:
 
         context.user_data["asset"] = text
-        context.user_data["previous_page"] = page
+
+        # Запоминаем страницу, с которой пришли
+        context.user_data["asset_page"] = page
+
         context.user_data["page"] = "time"
 
         await update.message.reply_text(
@@ -309,6 +317,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "5 минут",
         "15 минут"
     ]
+
 
     if text in times:
 
@@ -344,7 +353,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if text == "⏱ Время сделки" or text == "⏱ Изменить время":
 
-        context.user_data["previous_page"] = page
+        context.user_data["time_page"] = page
         context.user_data["page"] = "time"
 
         await update.message.reply_text(
@@ -438,54 +447,16 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if text == "⬅️ Назад":
 
-        if page == "forex":
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-        elif page == "crypto":
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-        elif page == "commodities":
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-        elif page == "stocks":
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-        elif page == "indexes":
-            context.user_data["page"] = "assets"
-
-            await update.message.reply_text(
-                "📂 Выберите раздел:",
-                reply_markup=asset_categories_menu()
-            )
-
-        elif page == "time":
+        # Если мы на выборе времени
+        if page == "time":
 
             previous_page = context.user_data.get(
-                "previous_page",
+                "asset_page",
                 "assets"
             )
 
             if previous_page == "forex":
+
                 context.user_data["page"] = "forex"
 
                 await update.message.reply_text(
@@ -494,6 +465,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
             elif previous_page == "crypto":
+
                 context.user_data["page"] = "crypto"
 
                 await update.message.reply_text(
@@ -502,6 +474,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
             elif previous_page == "commodities":
+
                 context.user_data["page"] = "commodities"
 
                 await update.message.reply_text(
@@ -510,6 +483,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
             elif previous_page == "stocks":
+
                 context.user_data["page"] = "stocks"
 
                 await update.message.reply_text(
@@ -518,6 +492,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
             elif previous_page == "indexes":
+
                 context.user_data["page"] = "indexes"
 
                 await update.message.reply_text(
@@ -526,6 +501,7 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
             else:
+
                 context.user_data["page"] = "assets"
 
                 await update.message.reply_text(
@@ -533,7 +509,90 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     reply_markup=asset_categories_menu()
                 )
 
-        elif page == "assets":
+            return
+
+
+        # Если мы на выборе валют
+        if page == "forex":
+
+            context.user_data["page"] = "assets"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=asset_categories_menu()
+            )
+
+            return
+
+
+        # Если мы на выборе криптовалют
+        if page == "crypto":
+
+            context.user_data["page"] = "assets"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=asset_categories_menu()
+            )
+
+            return
+
+
+        # Если мы на выборе сырья
+        if page == "commodities":
+
+            context.user_data["page"] = "assets"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=asset_categories_menu()
+            )
+
+            return
+
+
+        # Если мы на выборе акций
+        if page == "stocks":
+
+            context.user_data["page"] = "assets"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=asset_categories_menu()
+            )
+
+            return
+
+
+        # Если мы на выборе индексов
+        if page == "indexes":
+
+            context.user_data["page"] = "assets"
+
+            await update.message.reply_text(
+                "📂 Выберите раздел:",
+                reply_markup=asset_categories_menu()
+            )
+
+            return
+
+
+        # Если мы после сохранения настроек
+        if page == "selected":
+
+            context.user_data["page"] = "time"
+
+            await update.message.reply_text(
+                "⏱ Выберите время сделки:",
+                reply_markup=time_menu()
+            )
+
+            return
+
+
+        # Если мы в настройках
+        if page == "settings":
+
             context.user_data["page"] = "main"
 
             await update.message.reply_text(
@@ -541,13 +600,29 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=main_menu()
             )
 
-        else:
+            return
+
+
+        # Если мы в выборе раздела
+        if page == "assets":
+
             context.user_data["page"] = "main"
 
             await update.message.reply_text(
                 "🏠 Главное меню:",
                 reply_markup=main_menu()
             )
+
+            return
+
+
+        # В остальных случаях
+        context.user_data["page"] = "main"
+
+        await update.message.reply_text(
+            "🏠 Главное меню:",
+            reply_markup=main_menu()
+        )
 
         return
 
@@ -570,12 +645,3 @@ def main():
             filters.TEXT & ~filters.COMMAND,
             handler
         )
-    )
-
-    print("Бот запущен")
-
-    app.run_polling()
-
-
-if __name__ == "__main__":
-    main()
